@@ -3,10 +3,10 @@
 
 # Script to convert between base64-encoded Vnote files exported from
 # the Memo app that came with my Android phone and UTF8 text. Not
-# rigorously tested. Written by a inexperienced coder, may explode or
-# kill kittens. Dumps output on stdout and forgets it ever
-# happened. No special care is taken to ensure that converted text
-# actually is UTF8.
+# rigorously tested. Written by a newb coder, may explode or kill
+# kittens. Dumps output on stdout and forgets it ever happened. No
+# special care is taken to ensure that converted text actually is
+# UTF8.
 
 # Copyright (c) 2015 TentacleMan
 
@@ -33,16 +33,31 @@
 import sys
 import quopri
 
+usage = 'Usage: vnt2utf8.py FILE'
 magicword = 'BODY;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:'
 
-if len(sys.argv) > 1:
-    with open(sys.argv[1], 'r') as myfile:
-        for line in myfile:
+#
+# base64 decoding workhorse function
+#
+def decode_vnote(filename):
+    with open(filename, 'r') as infile:
+        for line in infile:
             line = line.translate(None, '\r\n')
             if line.startswith(magicword):
                 line = line[45:]
                 line = quopri.decodestring(line)
                 print line
                 break
+
+# --- Main program ---    
+if len(sys.argv) > 1:
+# infile present, or missing and options given
+    if len(sys.argv) == 2:
+        if sys.argv[1][0] == '-': # argv[1] is an option such as '-h'
+            print usage
+            exit(0)
+    # open file and decode it, print to stdout
+    decode_vnote(sys.argv[1])
+# just the script name present on the command line
 else:
-    print "Usage: vnt2utf8.py [filename]"
+    print usage
