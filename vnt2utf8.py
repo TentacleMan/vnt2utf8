@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python2
 # -*- coding: utf-8 -*-
 
 # Script to convert between base64-encoded Vnote files exported from
@@ -31,33 +31,30 @@
 # SOFTWARE.
 
 import sys
+import argparse
 import quopri
 
-usage = 'Usage: vnt2utf8.py FILE'
+# usage = 'Usage: vnt2utf8.py FILE'
 magicword = 'BODY;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:'
 
 #
 # base64 decoding workhorse function
 #
-def decode_vnote(filename):
-    with open(filename, 'r') as infile:
-        for line in infile:
-            line = line.translate(None, '\r\n')
-            if line.startswith(magicword):
-                line = line[45:]
-                line = quopri.decodestring(line)
-                print line
-                break
+def decode_vnote(infile, outfile):
+    for line in infile:
+        line = line.translate(None, '\r\n')
+        if line.startswith(magicword):
+            line = line[45:]
+            line = quopri.decodestring(line)
+            outfile.write(line)
+            break
 
 # --- Main program ---    
-if len(sys.argv) > 1:
-# infile present, or missing and options given
-    if len(sys.argv) == 2:
-        if sys.argv[1][0] == '-': # argv[1] is an option such as '-h'
-            print usage
-            exit(0)
-    # open file and decode it, print to stdout
-    decode_vnote(sys.argv[1])
-# just the script name present on the command line
-else:
-    print usage
+
+parser = argparse.ArgumentParser(description='Convert Vnote base64 to UTF-8 text.')
+parser.add_argument('INFILE', help='Vnote file to convert.', type=argparse.FileType('r'))
+parser.add_argument('-o', '--outfile', dest='OUTFILE', help='File to write to (default: stdout)', type=argparse.FileType('w'), default='-')
+args = parser.parse_args()
+
+decode_vnote(args.INFILE, args.OUTFILE)
+
