@@ -8,7 +8,7 @@
 # special care is taken to ensure that converted text actually is
 # UTF8.
 
-# Copyright (c) 2015 TentacleMan
+# Copyright (c) 2016 TentacleMan
 
 # Permission is hereby granted, free of charge, to any person
 # obtaining a copy of this software and associated documentation files
@@ -33,28 +33,41 @@
 import sys
 import argparse
 import quopri
+import textwrap
 
-# usage = 'Usage: vnt2utf8.py FILE'
 magicword = 'BODY;CHARSET=UTF-8;ENCODING=QUOTED-PRINTABLE:'
 
 #
 # base64 decoding workhorse function
 #
-def decode_vnote(infile, outfile):
+def decode_vnote(infile, outfile, wrap_lines):
     for line in infile:
         line = line.translate(None, '\r\n')
         if line.startswith(magicword):
             line = line[45:]
             line = quopri.decodestring(line)
+            if wrap_lines:
+                line = textwrap.fill(line)
             outfile.write(line)
             break
 
 # --- Main program ---    
 
-parser = argparse.ArgumentParser(description='Convert Vnote base64 to UTF-8 text.')
-parser.add_argument('INFILE', help='Vnote file to convert.', type=argparse.FileType('r'))
-parser.add_argument('-o', '--outfile', dest='OUTFILE', help='File to write to (default: stdout)', type=argparse.FileType('w'), default='-')
+parser = argparse.ArgumentParser(description=
+'Convert Vnote base64 to UTF-8 text.')
+
+parser.add_argument('infile', help='Vnote file to convert.',
+type=argparse.FileType('r'))
+
+parser.add_argument('-o', '--outfile',
+help='File to write to (default: stdout)', type=argparse.FileType('w'),
+default='-')
+
+parser.add_argument('-w', '--wrap-lines', help='Wrap long lines.',
+action="store_true")
+
 args = parser.parse_args()
 
-decode_vnote(args.INFILE, args.OUTFILE)
-
+decode_vnote(args.infile, args.outfile, args.wrap_lines)
+args.outfile.write("\n"); # It seems wrong to EOF on a non-empty line.
+sys.exit(0)
